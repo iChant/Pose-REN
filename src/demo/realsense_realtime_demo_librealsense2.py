@@ -19,12 +19,12 @@ def init_device():
     pipeline = rs.pipeline()
     config = rs.config()
     config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-    print 'config'
+    print('config')
     # Start streaming
     profile = pipeline.start(config)
     depth_sensor = profile.get_device().first_depth_sensor()
     depth_scale = depth_sensor.get_depth_scale()
-    print "Depth Scale is: " , depth_scale
+    print('Depth Scale is: ' , depth_scale)
     return pipeline, depth_scale
 
 def stop_device(pipeline):
@@ -55,11 +55,11 @@ def main():
     # intrinsic paramters of Intel Realsense SR300
     fx, fy, ux, uy = 463.889, 463.889, 320, 240
     # paramters
-    dataset = 'icvl'
+    dataset = 'hands17'
     if len(sys.argv) == 2:
         dataset = sys.argv[1]
 
-    lower_ = 1
+    lower_ = 300
     upper_ = 650
 
     # init realsense
