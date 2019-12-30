@@ -18,7 +18,7 @@ def init_device():
     # Configure depth streams
     pipeline = rs.pipeline()
     config = rs.config()
-    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 60)
     print('config')
     # Start streaming
     profile = pipeline.start(config)
@@ -53,14 +53,15 @@ def show_results(img, results, cropped_image, dataset):
 
 def main():
     # intrinsic paramters of Intel Realsense SR300
-    fx, fy, ux, uy = 463.889, 463.889, 320, 240
+    # fx, fy, ux, uy = 463.889, 463.889, 320, 240
+    fx, fy, ux, uy = 385.13, 385.13, 316.802, 241.818
     # paramters
     dataset = 'hands17'
     if len(sys.argv) == 2:
         dataset = sys.argv[1]
 
-    lower_ = 300
-    upper_ = 650
+    lower_ = 200
+    upper_ = 450
 
     # init realsense
     pipeline, depth_scale = init_device()
