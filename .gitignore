@@ -29,4 +29,5 @@ src/training*
 caffe-pose
 *hands17*
 backup
-.npy
+*.npy
+*.bak*
