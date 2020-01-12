@@ -13,7 +13,7 @@ import numpy as np
 if __name__ == '__main__':
     from utils import *
 else:
-    from src.Grad.utils.utils import *
+    from utils.utils import *
 
 
 def _get_base_vector():

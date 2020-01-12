@@ -1,11 +1,14 @@
+import os
+
 import pyrealsense2 as rs
 import numpy as np
 
-import os
+
 
 class Camera():
 
     def __init__(self):
+        print('Camera: ', os.getpid())
         self.pipeline = rs.pipeline()
 
     def start_device(self):

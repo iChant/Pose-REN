@@ -14,11 +14,50 @@ from model_pose_ren import ModelPoseREN
 import util
 from util import get_center_fast as get_center
 
+from chaincode import *
+from dtw import *
+from draw_plot import Plotter
+# import matplotlib
+# matplotlib.use('TkAgg')
+from matplotlib import pyplot as plt
+
+
+def read_trainset():
+    dataset_list = os.listdir('dataset')
+    datasets = {}
+    features = {}
+    for filename in dataset_list:
+        datasets[filename] = np.load('dataset/' + filename)
+        features[filename] = get_feature(datasets[filename])
+    return datasets, features
+
+def test(t_feat, feats):
+    # d, f = read_trainset()
+    res = {}
+    for name in feats:
+        dists, paths, tpath = dtw(feats[name], t_feat)
+        res[name] = np.linalg.norm(dists)
+    label = min(res, key=res.get)
+    print(label)
+    res_f = feats[label]
+    # test_f = feats[test]
+    dists, paths, tpath = dtw(feats[label], t_feat)
+    if get_dist(dists) >= 600:
+        label = 'None'
+        p = Plotter(get_dist(dists), tpath, dists, paths, t_feat, res_f, label)
+        p.show_hand_nodetail()
+        plt.show()
+    else:
+        p = Plotter(get_dist(dists), tpath, dists, paths, t_feat, res_f, label)
+        p.show_hand()
+        p.show_total_features()
+        plt.show()
+
 def init_device():
     # Configure depth streams
     pipeline = rs.pipeline()
     config = rs.config()
-    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 60)
+    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
     print('config')
     # Start streaming
     profile = pipeline.start(config)
@@ -71,7 +110,13 @@ def main():
         param=(fx, fy, ux, uy), use_gpu=True)
     # for msra dataset, use the weights for first split
     if dataset == 'msra':
-        hand_model.reset_model(dataset, test_id = 0)
+        hand_model.reset_model(dataset, test_id=0)
+        
+    is_recording = False
+    is_testing = False
+    d, f = read_trainset()
+    rec = []
+
     # realtime hand pose estimation loop
     while True:
         depth = read_frame_from_device(pipeline, depth_scale)
@@ -86,8 +131,39 @@ def main():
         results, cropped_image = hand_model.detect_image(depth)
         img_show = show_results(depth, results, cropped_image, dataset)
         cv2.imshow('result', img_show)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+
+        if is_recording or is_testing:
+            rec.append(results)
+        readkey = cv2.waitKey(1) & 0xFF
+
+        if readkey == ord('q'):
             break
+
+        elif readkey == ord('r'):
+            if is_testing:
+                print('*** cannot record ***')
+            if not is_recording:
+                print("--- is recording ---")
+                is_recording = True
+            else:
+                print("--- recording stopped ---")
+                is_recording = False
+                filename = input('filename: ')
+                np.save(filename + '.npy', rec)
+                rec = []
+
+        elif readkey & 0xFF == ord('t'):
+            if is_recording:
+                print('*** cannot test ***')
+            if not is_testing:
+                print('--- is testing ---')
+                is_testing = True
+            else:
+                is_testing = False
+                t_feat = get_feature(np.array(rec))
+                rec = []
+                test(t_feat, f)
+
     stop_device(pipeline)
 
 if __name__ == '__main__':
